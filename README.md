@@ -1,4 +1,5 @@
 # Consulta CNPJ
+![Exemplo](https://github.com/user-attachments/assets/77173f94-7b27-404f-b90a-e032ddc62284)
 
 Esta página fornece uma interface simples e eficiente para consultar dados cadastrais de empresas (CNPJ) diretamente do seu navegador, sem necessidade de instalação de softwares complexos ou servidores.
 
