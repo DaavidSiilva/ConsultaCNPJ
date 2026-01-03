@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Consulta CNPJ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="https://tax-transformation.com/static/assets/favicon.ico">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            /* Slate-100 */
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="text-slate-700">
+
+    <nav class="bg-white shadow-md border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <a href="https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/cnpjreva_Solicitacao.asp">
+                            <div class="flex font-bold text-2xl tracking-tighter">
+                                <span class="text-blue-600">g</span>
+                                <span class="text-yellow-500">o</span>
+                                <span class="text-green-600">v</span>
+                                <span class="text-blue-600">.</span>
+                                <span class="text-blue-600">br</span>
+                            </div>
+                        </a>
+                        <div class="h-6 w-px bg-slate-300 mx-2"></div>
+                        <span class="font-semibold text-slate-700 text-lg">Consulta CNPJ</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="https://www.linkedin.com/in/david-silva-m/" target="_blank"
+                        class="text-slate-500 hover:text-blue-600 transition-colors">
+                        <i class="fab fa-linkedin text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+            <form id="formConsulta" onsubmit="Consultar(event)" class="max-w-3xl mx-auto">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Pesquisar Empresa</h2>
+                    <p class="text-slate-500 text-sm mt-1">Digite o CNPJ para buscar os dados atualizados na Receita.
+                    </p>
+                </div>
+
+                <div class="flex gap-3">
+                    <div class="relative flex-grow group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i
+                                class="fas fa-search text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+                        </div>
+                        <input type="text" id="cnpj"
+                            class="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all sm:text-sm shadow-sm"
+                            placeholder="Ex: 00.000.000/0001-91" required>
+                    </div>
+                    <button type="submit" id="btn-search"
+                        class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
+                        <span>Consultar</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="loading" class="hidden flex justify-center py-10">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
+
+        <div id="resultado" class="hidden fade-in space-y-6">
+
+            <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                <h3 class="font-bold text-slate-700 flex items-center gap-2">
+                    <i class="fas fa-building text-blue-500"></i> Dados da Empresa
+                </h3>
+                <button onclick="ImprimirComprovante()"
+                    class="inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    <i class="fas fa-print mr-2 text-slate-500"></i> Imprimir Comprovante
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Informações Principais</p>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Razão Social</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="far fa-id-card text-slate-400"></i>
+                            </div>
+                            <input type="text" id="razao_social" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent font-semibold">
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Nome Fantasia</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-store text-slate-400"></i>
+                            </div>
+                            <input type="text" id="nome_fantasia" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Situação Cadastral</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-info-circle text-slate-400"></i>
+                            </div>
+                            <input type="text" id="situacao_cadastral" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Data da Situação</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="far fa-calendar-alt text-slate-400"></i>
+                            </div>
+                            <input type="text" id="data_situacao_cadastral" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Data de Abertura</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="far fa-calendar-check text-slate-400"></i>
+                            </div>
+                            <input type="text" id="data_inicio_atividade" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Tipo</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-sitemap text-slate-400"></i>
+                            </div>
+                            <input type="text" id="tipo" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-4">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Atividade Principal (CNAE)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-briefcase text-slate-400"></i>
+                            </div>
+                            <input type="text" id="atividade_principal" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-4">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Natureza Jurídica</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-balance-scale text-slate-400"></i>
+                            </div>
+                            <input type="text" id="natureza_juridica" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Endereço e Contato</p>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Logradouro Completo</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-map-marker-alt text-slate-400"></i>
+                            </div>
+                            <input type="text" id="endereco" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Bairro</label>
+                        <input type="text" id="bairro" readonly
+                            class="px-3 py-2 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Cidade/UF</label>
+                        <input type="text" id="cidade_uf" readonly
+                            class="px-3 py-2 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">CEP</label>
+                        <input type="text" id="cep" readonly
+                            class="px-3 py-2 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                    </div>
+
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Telefone</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-phone text-slate-400"></i>
+                            </div>
+                            <input type="text" id="telefone" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">E-mail</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-slate-400"></i>
+                            </div>
+                            <input type="text" id="email" readonly
+                                class="pl-10 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Outras Informações</p>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Simples Nacional</label>
+                        <input type="text" id="simples" readonly
+                            class="px-3 py-2 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Situação Especial</label>
+                        <input type="text" id="situacao_especial" readonly
+                            class="px-3 py-2 block w-full bg-slate-50 border-slate-200 rounded-md text-sm text-slate-800 focus:ring-0 border-transparent">
+                    </div>
+
+                    <div class="md:col-span-2 grid md:grid-cols-2 gap-6 mt-2">
+                        <div>
+                            <p class="text-xs font-bold text-slate-700 mb-2">Atividades Secundárias</p>
+                            <ul id="cnaesecundario"
+                                class="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded-md max-h-40 overflow-y-auto border border-slate-200">
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-700 mb-2">Inscrições Estaduais</p>
+                            <ul id="ie"
+                                class="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded-md max-h-40 overflow-y-auto border border-slate-200">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
+                <div class="mb-4 md:mb-0">
+                    <p class="font-semibold text-slate-700">Desenvolvido por David Silva</p>
+                    <p class="mt-1">Dados fornecidos pela API Pública <a href="https://www.cnpj.ws/" target="_blank"
+                            class="text-blue-600 hover:underline">CNPJ.ws</a></p>
+                    <p class="text-xs mt-1">Limite de 3 consultas por minuto.</p>
+                </div>
+                <div>
+                    <a href="https://www.linkedin.com/in/davidm-silva/" target="_blank"
+                        class="inline-flex items-center text-blue-700 font-semibold hover:text-blue-900">
+                        <i class="fab fa-linkedin fa-lg mr-2"></i> Conectar no LinkedIn
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentData = null; // Store data for printing
+
+        // Brasão da República em Base64 para garantir a exibição na impressão
+        const brasaoImg = "data:image/gif;base64,R0lGODlhPAA8APcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgMDAwP8AAAD/AP//AAAA//8A/wD//////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMwAAZgAAmQAAzAAA/wAzAAAzMwAzZgAzmQAzzAAz/wBmAABmMwBmZgBmmQBmzABm/wCZAACZMwCZZgCZmQCZzACZ/wDMAADMMwDMZgDMmQDMzADM/wD/AAD/MwD/ZgD/mQD/zAD//zMAMzMAZjMAmTMAzDMA/zMzADMzMzMzZjMzmTMzzDMz/zNmADNmMzNmZjNmmTNmzDNm/zOZADOZMzOZZjOZmTOZzDOZ/zPMADPMMzPMZjPMmTPMzDPM/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYAmWYAzGYA/2YzAGYzM2YzZmYzmWYzzGYz/2ZmAGZmM2ZmZmZmmWZmzGZm/2aZAGaZM2aZZmaZmWaZzGaZ/2bMAGbMM2bMZmbMmWbMzGbM/2b/AGb/M2b/Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5kzAJkzM5kzZpkzmZkzzJkz/5lmAJlmM5lmZplmmZlmzJlm/5mZAJmZM5mZZpmZmZmZzJmZ/5nMAJnMM5nMZpnMmZnMzJnM/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wzAMwzM8wzZswzmcwzzMwz/8xmAMxmM8xmZsxmmcxmzMxm/8yZAMyZM8yZZsyZmcyZzMyZ/8zMAMzMM8zMZszMmczMzMzM/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8zAP8zM/8zZv8zmf8zzP8z//9mAP9mM/9mZv9mmf9mzP9m//+ZAP+ZM/+ZZv+Zmf+ZzP+Z///MAP/MM//MZv/Mmf/MzP/M////AP//M///Zv//mf//zP///wAAAAAAAAAAAAAAACH5BAEAAP8ALAAAAAA8ADwAAAj/AP8JHEiwoMGDCBMqXMiwocOHECNKnEixosWLGDNq3MixI8J/IEOKHEmypMmTKFOqXMmypcuXMGPKnEmzps2bOHPq3Mmzp8+fQIMG/kd0qNGjSJMqXcq0qdOnUKNKnUq1qtWrWLNq3cq1q9evYMOKHUu2rNmzaNOqXcu2rdu3cOPKnUu3rt27ePPq3cu3r9+/gAMLHky4sOHDiBMrXsy4sePHkCNLnky5suXLmDNr3sy5s+fPoEOLHk26tOnTqFOrXs26tevXsGPLnk27tu3buHPr3s27t+/fwIMLH068uPHjyJMrX868ufPn0KNLn069uvXr2K9jC6++O/fvo01//x9Pvrz58+jTq1/Pvr379/Djy59Pv779+/jz69/Pv7///wAGKOCABBZo4IEIJqjgggw26OCDEEYo4YQUVmjhhRhmqOGGHHbo4YcghijiiCSWaOKJKKao4oostujiizDGKOOMNNZo44045qjjjjz26OOPQAYp5JBEFmnkkUgmqeSSTDbp5JNQRinllFRWaeWVWGap5ZZcdunll2CGKeaYZJZp5plopqnmmmy26eabcMYp55x01mnnnXjmqeeefPbp55+ABirooIQWauihiCaq6KKMNuroo5BGKumklFZq6aWYZqrpppx26umnoIYq6qiklmrqqaimquqqrLbq6quwxv8q66y01mrrrbjmquuuvPbq66/ABivssMQWa+yxyCar7LLMNuvss9BGK+201FZr7bXYZqvtttx26+234IYr7rjklmuuueOWW665pQAAOw==";
+
+        async function Consultar(event) {
+            event.preventDefault();
+
+            const btnSearch = document.getElementById("btn-search");
+            const loading = document.getElementById("loading");
+            const resultado = document.getElementById("resultado");
+            const inputCnpj = document.getElementById("cnpj");
+
+            let cnpj_raw = inputCnpj.value;
+            let cnpj = cnpj_raw.replace(/[^\d]/g, '');
+
+            if (cnpj.length !== 14) {
+                alert('Por favor, insira um CNPJ válido com 14 dígitos.');
+                return;
+            }
+
+            // UI Loading State
+            resultado.classList.add('hidden');
+            loading.classList.remove('hidden');
+            btnSearch.disabled = true;
+            btnSearch.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const url = `https://publica.cnpj.ws/cnpj/${cnpj}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        throw new Error("Limite de requisições excedido. Aguarde um momento.");
+                    }
+                    throw new Error('CNPJ não encontrado ou erro na API.');
+                }
+
+                const data = await response.json();
+                currentData = data; // Save for printing
+
+                PopulateFields(data);
+
+                loading.classList.add('hidden');
+                resultado.classList.remove('hidden');
+
+            } catch (error) {
+                loading.classList.add('hidden');
+                alert(error.message);
+            } finally {
+                btnSearch.disabled = false;
+                btnSearch.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function PopulateFields(data) {
+            // Helper for Safe Access
+            const safe = (val, def = '') => val ? val : def;
+
+            // Header Info
+            document.getElementById("razao_social").value = safe(data.razao_social);
+            document.getElementById("nome_fantasia").value = safe(data.estabelecimento.nome_fantasia, '***');
+            document.getElementById("situacao_cadastral").value = safe(data.estabelecimento.situacao_cadastral);
+            document.getElementById("data_situacao_cadastral").value = formatarData(data.estabelecimento.data_situacao_cadastral);
+            document.getElementById("data_inicio_atividade").value = formatarData(data.estabelecimento.data_inicio_atividade);
+            document.getElementById("tipo").value = safe(data.estabelecimento.tipo);
+            document.getElementById("natureza_juridica").value = data.natureza_juridica ? `${data.natureza_juridica.id} - ${data.natureza_juridica.descricao}` : '';
+
+            // Activity
+            const mainCnae = data.estabelecimento.atividade_principal;
+            document.getElementById("atividade_principal").value = mainCnae ? `${mainCnae.subclasse} - ${mainCnae.descricao}` : '';
+
+            // Address
+            const est = data.estabelecimento;
+            const fullAddress = `${safe(est.tipo_logradouro)} ${safe(est.logradouro)}, ${safe(est.numero)} ${safe(est.complemento)}`;
+            document.getElementById("endereco").value = fullAddress;
+            document.getElementById("bairro").value = safe(est.bairro);
+            document.getElementById("cidade_uf").value = `${safe(est.cidade.nome)} - ${safe(est.estado.sigla)}`;
+            document.getElementById("cep").value = formatarCEP(est.cep);
+            document.getElementById("telefone").value = `(${safe(est.ddd1)}) ${safe(est.telefone1)}`;
+            document.getElementById("email").value = safe(est.email).toLowerCase();
+
+            // Simples & Special
+            const simples = data.simples;
+            document.getElementById("simples").value = (simples && simples.simples === 'Sim')
+                ? "Optante Pelo Simples Nacional"
+                : "Não Optante Pelo Simples Nacional";
+
+            document.getElementById("situacao_especial").value = safe(est.situacao_especial, '********');
+
+            // Secondary CNAEs List
+            const listCnae = document.getElementById('cnaesecundario');
+            listCnae.innerHTML = '';
+            if (est.atividades_secundarias && est.atividades_secundarias.length > 0) {
+                est.atividades_secundarias.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = `${item.subclasse} - ${item.descricao}`;
+                    listCnae.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "Não informado";
+                listCnae.appendChild(li);
+            }
+
+            // Inscrições Estaduais
+            const listIE = document.getElementById('ie');
+            listIE.innerHTML = '';
+            if (est.inscricoes_estaduais && est.inscricoes_estaduais.length > 0) {
+                est.inscricoes_estaduais.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = "flex justify-between";
+                    const statusColor = item.ativo ? 'text-green-600' : 'text-red-500';
+                    const statusText = item.ativo ? 'Ativa' : 'Inativa';
+                    li.innerHTML = `<span>${item.estado.sigla} - ${item.inscricao_estadual}</span> <span class="${statusColor} font-bold text-xs border px-1 rounded border-slate-200">${statusText}</span>`;
+                    listIE.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "Não informado";
+                listIE.appendChild(li);
+            }
+        }
+
+        function formatarData(dataString) {
+            if (!dataString) return '';
+            const data = new Date(dataString);
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0'); // Meses 0-11
+            const ano = data.getFullYear();
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        function formatarCEP(cep) {
+            if (!cep) return '';
+            return cep.replace(/^(\d{2})(\d{3})(\d{3})$/, "$1.$2-$3");
+        }
+
+        function formatarCNPJ(cnpj) {
+            if (!cnpj) return '';
+            return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+        }
+
+        // --- LÓGICA DE IMPRESSÃO ---
+
+        function ImprimirComprovante() {
+            if (!currentData) {
+                alert("Realize uma consulta primeiro.");
+                return;
+            }
+
+            const d = currentData;
+            const e = d.estabelecimento;
+
+            // Format Data for Print
+            const cnpjFormatted = formatarCNPJ(e.cnpj);
+            const dataAbertura = formatarData(e.data_inicio_atividade);
+            const cnaePrincipal = `${e.atividade_principal.subclasse} - ${e.atividade_principal.descricao}`;
+
+            // Generate Secondary CNAEs HTML
+            let cnaesSecundariosHtml = '';
+            if (e.atividades_secundarias && e.atividades_secundarias.length > 0) {
+                e.atividades_secundarias.forEach(c => {
+                    cnaesSecundariosHtml += `<font face="Arial" style="font-size: 8pt"><b>${c.subclasse} - ${c.descricao}</b></font><br>`;
+                });
+            } else {
+                cnaesSecundariosHtml = `<font face="Arial" style="font-size: 8pt"><b>Não informado</b></font><br>`;
+            }
+
+            const natJuridica = `${d.natureza_juridica.id} - ${d.natureza_juridica.descricao}`;
+            const logradouro = e.logradouro;
+            const numero = e.numero;
+            const complemento = e.complemento || "";
+            const cep = formatarCEP(e.cep);
+            const bairro = e.bairro;
+            const municipio = e.cidade.nome;
+            const uf = e.estado.sigla;
+            const email = (e.email || "").toUpperCase();
+            const telefone = `(${e.ddd1}) ${e.telefone1}`;
+            const sitCadastral = e.situacao_cadastral.toUpperCase();
+            const dataSitCadastral = formatarData(e.data_situacao_cadastral);
+
+            const now = new Date();
+            const dataEmissao = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+            const horaEmissao = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+            // The exact HTML Layout requested
+            const printContent = `
+            <html>
+            <head>
+                <title>Comprovante de Inscrição e de Situação Cadastral</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { width: 100%; border-collapse: collapse; }
+                </style>
+            </head>
+            <body>
+                <div align="center">
+                <table border="1" cellspacing="0" style="width:17cm; line-height: 9pt; border-color: #000;">
+                  <tbody><tr>
+                    <td style="border:solid windowtext .5pt; padding:10pt">
+                        
+                        <table border="0" width="100%" style="line-height: 9pt;">
+                          <tbody><tr>
+                            <td valign="middle" align="left" width="60" height="60">
+                            <img width="60" height="60" src="${brasaoImg}" alt="Brasão">
+                            </td>
+                            <td align="center">
+                                <p style="margin:0;">&nbsp;</p>
+                                <font face="Arial" size="4"><b>REPÚBLICA FEDERATIVA DO BRASIL</b></font>
+                                <p style="margin:0;">&nbsp;</p>
+                                <font face="Arial"><b>CADASTRO NACIONAL DA PESSOA JURÍDICA</b></font>
+                                <p style="margin:0;">&nbsp;</p>
+                            </td>
+                            <td valign="middle" align="left" width="60" height="60"></td>
+                          </tr></tbody>
+                        </table>
+                        
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                           <tbody><tr>
+                            <td width="24%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                <font face="Arial" style="font-size: 6pt">NÚMERO DE INSCRIÇÃO</font><br>
+                                <font face="Arial" style="font-size: 8pt"><b>${cnpjFormatted}</b><br><b>${e.tipo.toUpperCase()}</b></font>
+                            </td>
+                            <td width="52%" valign="center" style="border: windowtext 0.5pt solid; border-left: none; padding: 3.5pt;">
+                                <center><font face="Arial" style="font-size: 10pt"><b>COMPROVANTE DE INSCRIÇÃO E DE SITUAÇÃO CADASTRAL</b></font></center>
+                            </td>
+                            <td width="24%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                <font face="Arial" style="font-size: 6pt">DATA DE ABERTURA</font><br>
+                                <font face="Arial" style="font-size: 8pt"><b>${dataAbertura}</b></font>
+                            </td>
+                           </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="100%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">NOME EMPRESARIAL</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${d.razao_social}</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="88%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">TÍTULO DO ESTABELECIMENTO (NOME DE FANTASIA)</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${e.nome_fantasia || '********'}</b></font>
+                                </td>
+                                <td width="2%" style="border-right: windowtext 0.5pt solid;"></td>
+                                <td width="10%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">PORTE</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${d.porte ? d.porte.descricao : 'DEMAIS'}</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="100%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">CÓDIGO E DESCRIÇÃO DA ATIVIDADE ECONÔMICA PRINCIPAL</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${cnaePrincipal}</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="100%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">CÓDIGO E DESCRIÇÃO DAS ATIVIDADES ECONÔMICAS SECUNDÁRIAS</font><br>
+                                    ${cnaesSecundariosHtml}
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="100%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">CÓDIGO E DESCRIÇÃO DA NATUREZA JURÍDICA</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${natJuridica}</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="50%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">LOGRADOURO</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${logradouro}</b></font>
+                                </td>
+                                <td width="2%" style="border-right: windowtext 0.5pt solid;"></td>
+                                <td width="10%" valign="top" style="border: windowtext 0.5pt solid; border-left:none; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">NÚMERO</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${numero}</b></font>
+                                </td>
+                                <td width="2%" style="border-right: windowtext 0.5pt solid;"></td>
+                                <td width="36%" valign="top" style="border: windowtext 0.5pt solid; border-left:none; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">COMPLEMENTO</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${complemento}</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="18%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">CEP</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${cep}</b></font>
+                                </td>
+                                <td width="2%" style="border-right: windowtext 0.5pt solid;"></td>
+                                <td width="30%" valign="top" style="border: windowtext 0.5pt solid; border-left:none; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">BAIRRO/DISTRITO</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${bairro}</b></font>
+                                </td>
+                                <td width="2%" style="border-right: windowtext 0.5pt solid;"></td>
+                                <td width="38%" valign="top" style="border: windowtext 0.5pt solid; border-left:none; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">MUNICÍPIO</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${municipio}</b></font>
+                                </td>
+                                <td width="2%" style="border-right: windowtext 0.5pt solid;"></td>
+                                <td width="10%" valign="top" style="border: windowtext 0.5pt solid; border-left:none; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">UF</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${uf}</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="50%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">ENDEREÇO ELETRÔNICO</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${email}</b></font>
+                                </td>
+                                <td width="2%" style="border-right: windowtext 0.5pt solid;"></td>
+                                <td width="48%" valign="top" style="border: windowtext 0.5pt solid; border-left:none; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">TELEFONE</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${telefone}</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="100%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">ENTE FEDERATIVO RESPONSÁVEL (EFR)</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>*****</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="64%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">SITUAÇÃO CADASTRAL</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${sitCadastral}</b></font>
+                                </td>
+                                <td width="2%" style="border-right: windowtext 0.5pt solid;"></td>
+                                <td width="24%" valign="top" style="border: windowtext 0.5pt solid; border-left:none; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">DATA DA SITUAÇÃO CADASTRAL</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${dataSitCadastral}</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="100%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">MOTIVO DE SITUAÇÃO CADASTRAL</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>&nbsp;</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                        <p style="margin:0;">&nbsp;</p>
+                        <table border="0" width="100%" style="border-collapse: collapse;">
+                            <tbody><tr>
+                                <td width="64%" valign="top" style="border: windowtext 0.5pt solid; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">SITUAÇÃO ESPECIAL</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${e.situacao_especial || '********'}</b></font>
+                                </td>
+                                <td width="2%" style="border-right: windowtext 0.5pt solid;"></td>
+                                <td width="24%" valign="top" style="border: windowtext 0.5pt solid; border-left:none; padding: 3.5pt;">
+                                    <font face="Arial" style="font-size: 6pt">DATA DA SITUAÇÃO ESPECIAL</font><br>
+                                    <font face="Arial" style="font-size: 8pt"><b>${e.data_situacao_especial || '********'}</b></font>
+                                </td>
+                            </tr></tbody>
+                        </table>
+
+                    </td>
+                  </tr>
+                </tbody></table>
+                <br>
+                <div style="width:17cm; text-align:left;">
+                    <p><font face="Arial" size="2">Aprovado pela Instrução Normativa RFB nº 2.119, de 06 de dezembro de 2022.</font></p>
+                    <table border="0" cellspacing="0" style="width:100%; line-height: 6pt;">
+                        <tbody><tr>
+                            <td align="left"><p><font face="Arial" size="2">Emitido no dia <b>${dataEmissao}</b> às <b>${horaEmissao}</b> (data e hora de Brasília).</font></p></td>
+                            <td align="right"><p><font face="Arial" size="2">Página: <b>1/1</b></font></p></td>
+                        </tr></tbody>
+                    </table>
+                </div>
+                </div>
+                <script>
+                    window.onload = function() { window.print(); }
+                <\/script>
+            </body>
+            </html>
+            `;
+
+            const win = window.open('', '_blank');
+            win.document.write(printContent);
+            win.document.close();
+        }
+    </script>
+</body>
+
+</html>
